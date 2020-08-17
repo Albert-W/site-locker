@@ -1,6 +1,7 @@
 <!DOCTYPE html>
   <html>
     <head>
+      <title>Site Blocker Options</title>
       <style>
         button {
           height: 30px;
@@ -8,14 +9,26 @@
           outline: none;
           margin: 10px;
         }
+        textarea {
+          height: auto;
+          width: 200px;
+        }
+
       </style>
+      
     </head>
     <body>
-      <div id="buttonDiv">
-      </div>
-      <div>
-        <p>Choose a different background color!</p>
-      </div>
+      <h1>Site Blocker Options</h1>
+      <h2>Blocked Site:</h2>
+
+      <textarea id="sites" rows="5"></textarea>
+
+
+      <br>
+      <input type="submit" id="saveSites" value="Save Sites">
+      <input type="submit" id="resetSites" value="Reset Sites">
+
+
     </body>
     <script src="options.js"></script>
   </html>

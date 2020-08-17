@@ -28,10 +28,16 @@
         }
       },
 
-      "permissions": ["activeTab","declarativeContent","storage"],
+      "permissions": [
+        "activeTab",
+        "declarativeContent",
+        "storage",
+        "notifications",
+        "contextMenus"
+      ],
       "background": {
-        "scripts": ["background.js"],
-        "persistent": false
+        "scripts": ["eventPage.js"],
+        "persistent": false 
       },
       "options_page": "options.html"  
 
