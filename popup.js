@@ -1,102 +1,90 @@
 let blacklist = /www.zhihu.com*/;
 let minites = document.getElementById('minites');
 let block = document.getElementById('block');
-let blockFlag = false;
+let remainDiv = document.getElementById('remainDiv');
+let remain = document.getElementById('remain');
+// let blockFlag = false;
 
-chrome.storage.sync.get(['time','sites'],function(element){
-    blacklist = element.sites; // this is an array; 
-    minites.value = element.time;
+// time -> remain time.
+// sites -> blocked sites. 
+chrome.storage.sync.get(['time','sites','defaultTime'],function(element){
+    // blacklist = element.sites; // this is an array; 
+    
+    minites.value = element.defaultTime;
+    if(element.time > 0){
+      remainDiv.style.visibility = 'visible';
+      remain.textContent = element.time;
+    }
   
 })
 
-chrome.storage.sync.get('blockFlag',function(element){
-  if(element.blockFlag == ture){
-    minites.value = element.time;
-  }
+// keep track of the remain time. 
+chrome.storage.onChanged.addListener(function(changes,storageName){
+  remain.textContent = changes.time.newValue.toString();
 })
 
 
 
 block.onclick = function(element){
-  
-
-  // store the time you need to block
-  // chrome.storage.sync.set({'time': minites.value}, function() {
-  //   console.log("The time is stored");
-  // });
-
-
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    if( blacklist.test(tabs[0].url)){
-      alert("you should be blocked");
-      chrome.tabs.executeScript(
-          tabs[0].id,
-          // {code: 'document.body.innerHTML = "' + 'This is blocked!' + '";'});
-          {code: 'document.body.style.visibility =  "hidden"'});
-
-    } else {
-      alert("this website is granted");
-    }
-  });  
+  getblock(); 
 };
 
 
 let unblock = document.getElementById('unblock');
 
 unblock.onclick = function(element){
-  //alert(time);
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    if( blacklist.test(tabs[0].url)){
-      alert("This web is unblocked");
-      chrome.tabs.executeScript(
-          tabs[0].id,
-          // {code: 'document.body.innerHTML = "' + 'This is blocked!' + '";'});
-          {code: 'document.body.style.visibility =  "visible"'});
-      
-          
-      //开始记时：
-      let time = minites.value;
-      var timer = setInterval(function(){
-          time -= 1;
-          minites.value = time;
-          chrome.storage.sync.set({'time': time});
-          // store the time
+  getUnblock();
+  // 记录默认时间    
+  chrome.storage.sync.set({'defaultTime': minites.value});
+  // 在eventPage 处理定时任务。 
+  chrome.runtime.sendMessage({todo:"start timer", time:minites.value});
 
-
-          chrome.storage.sync.get('time',function(element){
-            if(element.time == 0){
-              clearInterval(timer);
-              chrome.tabs.executeScript(
-                tabs[0].id,
-                {code: 'document.body.style.visibility =  "hidden"'});
-            }
-          })
-          // if(time == 0){
-          //   clearInterval(timer);
-          //   chrome.tabs.executeScript(
-          //     tabs[0].id,
-          //     {code: 'document.body.style.visibility =  "hidden"'});
-    
-          // }    
-        }, 1000)
-      
-          
-    } else {
-      // alert("this website is granted");
-    }
-  });  
+  //显示隐藏块
+  let time = minites.value;
+  remain.textContent = time;
+  remainDiv.style.visibility = 'visible';
+ 
 };
 
 
 
-// start to unblock for 1min. 
-// after that block again. 
-// use setTimeout()
+function getUnblock(){
+  chrome.tabs.query({}, function(tabs) {
+    for(tab of tabs){
+      // console.log(tab.url);
+      
+      chrome.tabs.executeScript(
+        tab.id,
+        {code: 'document.body.style.visibility =  "visible"'});
+      
+    }
+
+  })
+}
 
 
+function getblock(){
+  chrome.tabs.query({}, function(tabs) {
+    let blacklist = /www.zhihu.com*/;
+    for(tab of tabs){
+      // console.log(tab.url);
+      if( blacklist.test(tab.url)){
+        chrome.tabs.executeScript(
+          tab.id,
+          {code: 'document.body.style.visibility =  "hidden"'});
+      }
+    }
 
+  })
+}
 
-
+// block all request to blocklist
+chrome.webRequest.onBeforeRequest.addListener(
+  function(details) {
+    return {cancel: details.url.indexOf("://www.zhihu.com/") != -1};
+  },
+  {urls: ["<all_urls>"]},
+  ["blocking"]);
 
 
 

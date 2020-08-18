@@ -33,7 +33,11 @@
         "declarativeContent",
         "storage",
         "notifications",
-        "contextMenus"
+        "contextMenus",
+        "tabs",
+        "http://*/",
+        "https://*/",
+        "webRequest"
       ],
       "background": {
         "scripts": ["eventPage.js"],
