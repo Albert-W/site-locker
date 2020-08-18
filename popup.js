@@ -26,6 +26,7 @@ chrome.storage.onChanged.addListener(function(changes,storageName){
 
 
 block.onclick = function(element){
+  
   getblock(); 
 };
 
@@ -46,28 +47,11 @@ unblock.onclick = function(element){
  
 };
 
-
-
-function getUnblock(){
-  chrome.tabs.query({}, function(tabs) {
-    for(tab of tabs){
-      // console.log(tab.url);
-      
-      chrome.tabs.executeScript(
-        tab.id,
-        {code: 'document.body.style.visibility =  "visible"'});
-      
-    }
-
-  })
-}
-
-
 function getblock(){
   chrome.tabs.query({}, function(tabs) {
     let blacklist = /www.zhihu.com*/;
     for(tab of tabs){
-      // console.log(tab.url);
+      console.log(tab.url);
       if( blacklist.test(tab.url)){
         chrome.tabs.executeScript(
           tab.id,
@@ -78,13 +62,25 @@ function getblock(){
   })
 }
 
-// block all request to blocklist
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) {
-    return {cancel: details.url.indexOf("://www.zhihu.com/") != -1};
-  },
-  {urls: ["<all_urls>"]},
-  ["blocking"]);
+function getUnblock(){
+  chrome.tabs.query({}, function(tabs) {
+    for(tab of tabs){
+      // console.log(tab.url);
+      if( blacklist.test(tab.url)){
+        chrome.tabs.update(
+          tab.id,
+          {url: tab.url});
+
+      }
+    }
+
+  })
+}
+
+
+
+
+
 
 
 

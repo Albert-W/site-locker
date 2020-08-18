@@ -26,10 +26,11 @@ chrome.contextMenus.onClicked.addListener(function(element){
 // })
 
 // logic of message 
+var time
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
   if(request.todo == "start timer"){
     // alert(request.time);
-    let time = request.time;
+    time = request.time;
     var timer = setInterval(function(){
       time -= 1;
       chrome.storage.sync.set({'time': time});
@@ -37,7 +38,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
       chrome.browserAction.setBadgeText({
         "text":time.toString()
       });  
-      if(time == 0){
+      if(time <= 0){
         clearInterval(timer);
         getblock();
       }
@@ -63,7 +64,21 @@ function getblock(){
   })
 }
 
+// block all request to blocklist
+chrome.webRequest.onBeforeRequest.addListener(
+  
+  function(details) {
+    //alert(time)
+    if(time==null || time == 0){
+      return {cancel: true};
 
+    } else {
+      return {cancel: false};
+    }
+
+  },
+  {urls: ["*://www.zhihu.com/*"]},
+  ["blocking"]);
 
 
 
