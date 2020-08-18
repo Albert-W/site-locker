@@ -1,107 +1,151 @@
-
 // logic of contextMenu
 var contextMenuItem = {
-  'id':'block',
-  'title':'block it',
-  'contexts':['page']
-
+  'id': 'block',
+  'title': 'block it',
+  'contexts': ['page']
 }
 chrome.contextMenus.create(contextMenuItem);
 
-chrome.contextMenus.onClicked.addListener(function(element){
-  if(element.menuItemId == "block"){
-    alert("This website should be blocked");
+chrome.contextMenus.onClicked.addListener(function (element) {
+  if (element.menuItemId == "block") {
+    // alert("This website should be blocked");
+    getblock();
   }
 })
 
-// chrome.storage.onChanged.addListener(function(changes,storageName){
-//   // logic of Badge
-//   chrome.browserAction.setBadgeText({
-//     "text":changes.time.newValue.toString()
-//   });
-//   // logic of block
-//   if(changes.time.newValue == 0){
-//     getblock();
-//   }
-// })
 
 // logic of message 
 var time
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
-  if(request.todo == "start timer"){
+var blacklist
+var newlist
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.todo == "start timer") {
     // alert(request.time);
     time = request.time;
-    var timer = setInterval(function(){
+    var timer = setInterval(function () {
       time -= 1;
-      chrome.storage.sync.set({'time': time});
+      chrome.storage.sync.set({ 'time': time });
 
       chrome.browserAction.setBadgeText({
-        "text":time.toString()
-      });  
-      if(time <= 0){
+        "text": time.toString()
+      });
+      if (time <= 0) {
         clearInterval(timer);
         getblock();
       }
-       
+
     }, 1000)
   }
-  
+
+  // 保存blacklist
+  if (request.todo == "blacklist") {
+    blacklist = request.sites;
+    alert(blacklist);
+    newlist = blacklist.map(i => "*://" + i + "/*");
+    alert(newlist)
+    chrome.webRequest.onBeforeRequest.addListener(
+
+      function (details) {
+        //alert(time)
+        if (time == null || time == 0) {
+          return { cancel: true };
+
+        } else {
+          return { cancel: false };
+        }
+
+      },
+      // {urls: ["*://www.zhihu.com/*"]},
+      { urls: newlist },
+      ["blocking"]);
+
+  }
+
+
 })
 
-
-function getblock(){
-  chrome.tabs.query({}, function(tabs) {
-    let blacklist = /www.zhihu.com*/;
-    for(tab of tabs){
-      // console.log(tab.url);
-      if( blacklist.test(tab.url)){
-        chrome.tabs.executeScript(
-          tab.id,
-          {code: 'document.body.style.visibility =  "hidden"'});
-      }
-    }
-
+function getblock() {
+  chrome.tabs.query({}, function (tabs) {
+    blockTabs(tabs);
   })
 }
 
-// block all request to blocklist
-chrome.webRequest.onBeforeRequest.addListener(
-  
-  function(details) {
-    //alert(time)
-    if(time==null || time == 0){
-      return {cancel: true};
-
-    } else {
-      return {cancel: false};
+// pass tab to a function which can access blacklist 
+// let blacklist
+function blockTabs(tabs) {
+  chrome.storage.sync.get(['sites'], function (element) {
+    let blacklist = element.sites;
+    console.log(blacklist);
+    for (let site of blacklist) {
+      let regex = new RegExp(site + '.*');
+      // alert(regex);
+      for (tab of tabs) {
+        // alert(tab.url);
+        if (regex.test(tab.url)) {
+          chrome.tabs.executeScript(
+            tab.id,
+            { code: 'document.body.style.visibility =  "hidden"' });
+        }
+      }
     }
-
-  },
-  {urls: ["*://www.zhihu.com/*"]},
-  ["blocking"]);
+  })
+}
 
 
+// 安装时就使屏蔽生效
+// chrome.runtime.onInstalled.addListener(function() {
+
+//   chrome.storage.sync.get(['sites'],function(element){
+//     chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
+//     // alert(element.sites)
+//   })
+// })
+
+// chrome.storage.onChanged.addListener(function(changes,storageName){
+//   blacklist = changes.sites.newValue;
+// })
+
+// alert(blacklist)
+
+// block all request to blocklist
+// refresh 也屏蔽
+// chrome.storage.sync.get(['time','sites','defaultTime'],function(element){
+//   let blacklist = element.sites; 
+
+
+
+  // alert(time)
 
 
 
 
 
-chrome.runtime.onInstalled.addListener(function() {
-    chrome.storage.sync.set({color: '#3aa757'}, function() {
-      console.log("The color is green.");
-    });
 
-    chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-        chrome.declarativeContent.onPageChanged.addRules([{
-          conditions: [new chrome.declarativeContent.PageStateMatcher({
-            pageUrl: {hostEquals: 'developer.chrome.com'},
-          })
-          ],
-              actions: [new chrome.declarativeContent.ShowPageAction()]
-        }]);
-      });
 
-  });
+
+
+
+
+
+
+
+// chrome.runtime.onInstalled.addListener(function() {
+//     chrome.storage.sync.set({color: '#3aa757'}, function() {
+//       console.log("The color is green.");
+//     });
+
+//     chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+//         chrome.declarativeContent.onPageChanged.addRules([{
+//           conditions: [new chrome.declarativeContent.PageStateMatcher({
+//             pageUrl: {hostEquals: 'developer.chrome.com'},
+//           })
+//           ],
+//               actions: [new chrome.declarativeContent.ShowPageAction()]
+//         }]);
+//       });
+
+//   });
 
 // chrome.runtime.onSuspend.addListener(function() {
 //   chrome.storage.sync.set({
