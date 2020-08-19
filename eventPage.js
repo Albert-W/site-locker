@@ -35,35 +35,38 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         getblock();
       }
 
-    }, 1000)
+    }, 1000 * 60)
   }
 
   // 保存blacklist
   if (request.todo == "blacklist") {
     blacklist = request.sites;
-    alert(blacklist);
-    newlist = blacklist.map(i => "*://" + i + "/*");
-    alert(newlist)
-    chrome.webRequest.onBeforeRequest.addListener(
-
-      function (details) {
-        //alert(time)
-        if (time == null || time == 0) {
-          return { cancel: true };
-
-        } else {
-          return { cancel: false };
-        }
-
-      },
-      // {urls: ["*://www.zhihu.com/*"]},
-      { urls: newlist },
-      ["blocking"]);
+    // alert(blacklist);
+    requestBlock(blacklist);
 
   }
-
-
 })
+
+function requestBlock(blacklist){
+  newlist = blacklist.map(i => "*://" + i + "/*");
+  // alert(newlist)
+  chrome.webRequest.onBeforeRequest.addListener(
+
+    function (details) {
+      //alert(time)
+      if (time == null || time == 0) {
+        return { cancel: true };
+
+      } else {
+        return { cancel: false };
+      }
+
+    },
+    // {urls: ["*://www.zhihu.com/*"]},
+    { urls: newlist },
+    ["blocking"]);  
+}
+
 
 function getblock() {
   chrome.tabs.query({}, function (tabs) {
@@ -93,14 +96,22 @@ function blockTabs(tabs) {
 }
 
 
-// 安装时就使屏蔽生效
+// 安装时生效，重启时不生效
 // chrome.runtime.onInstalled.addListener(function() {
 
 //   chrome.storage.sync.get(['sites'],function(element){
 //     chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
-//     // alert(element.sites)
+//     alert(element.sites)
 //   })
 // })
+
+// 每次启动时生效。
+chrome.storage.sync.get(['sites'],function(element){
+  chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
+  // alert(element.sites)
+  requestBlock(element.sites);
+})
+
 
 // chrome.storage.onChanged.addListener(function(changes,storageName){
 //   blacklist = changes.sites.newValue;

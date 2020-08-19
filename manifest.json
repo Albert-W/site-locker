@@ -1,22 +1,22 @@
 {
-    "name": "Hello Extensions",
-    "description" : "Base Level Extension",
+    "name": "Site Locker",
+    "description" : "to lock your sites and increase productivity",
     "version": "1.0",
     "manifest_version": 2,
     "browser_action": {
         "default_popup": "popup.html",
         "default_icon": {
-            "16": "images/get_started16.png",
-            "32": "images/get_started32.png",
-            "48": "images/get_started48.png",
-            "128": "images/get_started128.png"            
+            "16": "images/favicon16.png",
+            "32": "images/favicon32.png",
+            "48": "images/favicon48.png",
+            "128": "images/favicon128.png"            
         }
     },
     "icons": {
-        "16": "images/get_started16.png",
-        "32": "images/get_started32.png",
-        "48": "images/get_started48.png",
-        "128": "images/get_started128.png"
+      "16": "images/favicon16.png",
+      "32": "images/favicon32.png",
+      "48": "images/favicon48.png",
+      "128": "images/favicon128.png"   
       },
     "commands": {
         "_execute_browser_action": {

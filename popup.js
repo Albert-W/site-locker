@@ -17,7 +17,7 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
     remain.textContent = element.time;
   }
   // 向event page 发送消息保存blacklist
-  chrome.runtime.sendMessage({ todo: "blacklist", sites: Array.from(blacklist) });
+  // chrome.runtime.sendMessage({ todo: "blacklist", sites: Array.from(blacklist) });
 
 })
 
