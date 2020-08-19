@@ -18,19 +18,9 @@
       "48": "images/favicon48.png",
       "128": "images/favicon128.png"   
       },
-    "commands": {
-        "_execute_browser_action": {
-          "suggested_key": {
-            "default": "Ctrl+Shift+F",
-            "mac": "MacCtrl+Shift+F"
-          },
-          "description": "Opens hello.html"
-        }
-      },
+
 
       "permissions": [
-        "activeTab",
-        "declarativeContent",
         "storage",
         "notifications",
         "contextMenus",
