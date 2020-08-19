@@ -8,7 +8,7 @@ chrome.storage.sync.get('sites',function(element){
 
 let save = document.getElementById('saveSites');
 save.onclick = function(element){
-  chrome.storage.sync.set({'sites': sites.value.split('\n')}, function(){
+  chrome.storage.sync.set({'sites': sites.value.trim().split('\n')}, function(){
     var saveNote = {
       type:'basic',
       iconUrl:'images\\get_started48.png',

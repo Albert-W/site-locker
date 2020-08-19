@@ -9,7 +9,7 @@ let remain = document.getElementById('remain');
 // sites -> blocked sites. 
 // defaultTime -> remeber the time length 
 chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
-  blacklist = new Set(element.sites); // this is an Set(); 
+  blacklist = new Set(element.sites); 
 
   minites.value = element.defaultTime;
   if (element.time > 0) {
@@ -23,12 +23,18 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
 
 // keep track of the remain time. 
 chrome.storage.onChanged.addListener(function (changes, storageName) {
-  remain.textContent = changes.time.newValue.toString();
+  if(changes.time){
+    remain.textContent = changes.time.newValue.toString();
+
+  }
 })
 
 
 
 block.onclick = function (element) {
+  // set time to zero
+  chrome.storage.sync.set({ 'time':0 });
+
   // add the current url 
   chrome.tabs.query({ active: true }, tabs => {
     let curUrl = new URL(tabs[0].url);
@@ -111,7 +117,11 @@ function unblockTabs(tabs) {
 
 }
 
-
+// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+//   if (request.todo == "click") {
+//     block.click();
+//   }
+// });
 
 
 

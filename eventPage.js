@@ -9,37 +9,58 @@ chrome.contextMenus.create(contextMenuItem);
 chrome.contextMenus.onClicked.addListener(function (element) {
   if (element.menuItemId == "block") {
     // alert("This website should be blocked");
-    getblock();
+      // add the current url 
+
+      chrome.tabs.query({ active: true }, tabs => {
+        let curUrl = new URL(tabs[0].url);
+        // alert(url);
+        // alert(url.host);
+        // alert(curUrl.hostname);
+        addurl(curUrl.hostname);
+        getblock(); // do it during the call back function 
+      })
+
   }
 })
+
+function addurl(url){
+  chrome.storage.sync.get(['sites'], function (element) {
+    var blacklist = new Set(element.sites);
+    console.log(blacklist);
+    blacklist.add(url);
+    chrome.storage.sync.set({ 'sites': Array.from(blacklist) })
+  })
+}
 
 
 // logic of message 
 var time
-var blacklist
-var newlist
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.todo == "start timer") {
     // alert(request.time);
     time = request.time;
+    chrome.browserAction.setBadgeText({
+      "text": time.toString()
+    });
     var timer = setInterval(function () {
       time -= 1;
-      chrome.storage.sync.set({ 'time': time });
 
       chrome.browserAction.setBadgeText({
-        "text": time.toString()
+        "text": Math.max(time,0).toString()
       });
-      if (time <= 0) {
+
+      if (time <= 0 ) {
         clearInterval(timer);
         getblock();
       }
+      chrome.storage.sync.set({ 'time': time });
 
-    }, 1000 * 60)
+    }, 1000 * 60 )
   }
 
   // 保存blacklist
   if (request.todo == "blacklist") {
+    time = 0;
     blacklist = request.sites;
     // alert(blacklist);
     requestBlock(blacklist);
@@ -48,7 +69,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 })
 
 function requestBlock(blacklist){
-  newlist = blacklist.map(i => "*://" + i + "/*");
+  let newlist = blacklist.map(i => "*://" + i + "/*");
   // alert(newlist)
   chrome.webRequest.onBeforeRequest.addListener(
 
@@ -73,6 +94,9 @@ function getblock() {
     blockTabs(tabs);
   })
 }
+
+
+
 
 // pass tab to a function which can access blacklist 
 // let blacklist
