@@ -11,7 +11,10 @@ let remain = document.getElementById('remain');
 chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
   blacklist = new Set(element.sites); 
 
-  minites.value = element.defaultTime;
+  if(element.defaultTime > 0){
+
+    minites.value = element.defaultTime;
+  }
   if (element.time > 0) {
     remainDiv.style.visibility = 'visible';
     remain.textContent = element.time;
@@ -25,7 +28,6 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
 chrome.storage.onChanged.addListener(function (changes, storageName) {
   if(changes.time){
     remain.textContent = changes.time.newValue.toString();
-
   }
 })
 
@@ -36,7 +38,7 @@ block.onclick = function (element) {
   chrome.storage.sync.set({ 'time':0 });
 
   // add the current url 
-  chrome.tabs.query({ active: true }, tabs => {
+  chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     let curUrl = new URL(tabs[0].url);
     // alert(url);
     // alert(url.host);
@@ -65,9 +67,12 @@ function blockTabs(tabs) {
     for (tab of tabs) {
       // alert(tab.url);
       if (regex.test(tab.url)) {
-        chrome.tabs.executeScript(
+        // chrome.tabs.executeScript(
+        //   tab.id,
+        //   { code: 'document.body.style.visibility =  "hidden"' });
+        chrome.tabs.update(
           tab.id,
-          { code: 'document.body.style.visibility =  "hidden"' });
+          { url: tab.url });        
       }
     }
   }
@@ -96,7 +101,7 @@ unblock.onclick = function (element) {
 
 
 function getUnblock() {
-  chrome.tabs.query({}, function (tabs) {
+  chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
     unblockTabs(tabs);
   })
 }

@@ -11,13 +11,13 @@ chrome.contextMenus.onClicked.addListener(function (element) {
     // alert("This website should be blocked");
       // add the current url 
 
-      chrome.tabs.query({ active: true }, tabs => {
+      chrome.tabs.query({active: true, currentWindow: true}, tabs => {
         let curUrl = new URL(tabs[0].url);
         // alert(url);
         // alert(url.host);
         // alert(curUrl.hostname);
         addurl(curUrl.hostname);
-        getblock(); // do it during the call back function 
+        // getblock(); // do it during the call back function 
       })
 
   }
@@ -28,9 +28,44 @@ function addurl(url){
     var blacklist = new Set(element.sites);
     console.log(blacklist);
     blacklist.add(url);
-    chrome.storage.sync.set({ 'sites': Array.from(blacklist) })
+    chrome.storage.sync.set({ 'sites': Array.from(blacklist) });
+    requestBlock(Array.from(blacklist));
+    chrome.tabs.query({}, function (tabs) {
+      blockTabs(tabs,blacklist);
+    })
   })
+  // callback();
 }
+
+// function getblock() {
+//   chrome.tabs.query({}, function (tabs) {
+//     blockTabs(tabs);
+//   })
+// }
+
+// pass tab to a function which can access blacklist 
+// let blacklist
+function blockTabs(tabs, blacklist) {
+
+  for (let site of blacklist) {
+    let regex = new RegExp(site + '.*');
+    // alert(regex);
+    for (tab of tabs) {
+      // alert(tab.url);
+      if (regex.test(tab.url)) {
+        // chrome.tabs.executeScript(
+        //   tab.id,
+        //   { code: 'document.body.style.visibility =  "hidden"' });
+        chrome.tabs.update(
+          tab.id,
+          { url: tab.url });          
+      }
+    }
+  }
+
+}
+
+
 
 
 // logic of message 
@@ -51,11 +86,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
       if (time <= 0 ) {
         clearInterval(timer);
-        getblock();
+        // getblock();
+        addurl();
       }
       chrome.storage.sync.set({ 'time': time });
 
-    }, 1000 * 60 )
+    }, 1000 )
   }
 
   // 保存blacklist
@@ -71,53 +107,25 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 function requestBlock(blacklist){
   let newlist = blacklist.map(i => "*://" + i + "/*");
   // alert(newlist)
+  let blocklist =  function (details) {
+    //alert(time)
+    if (time == null || time == 0) {
+      return { cancel: true };
+
+    } else {
+      return { cancel: false };
+    }
+
+  }
+  chrome.webRequest.onBeforeRequest.removeListener(blocklist);
   chrome.webRequest.onBeforeRequest.addListener(
-
-    function (details) {
-      //alert(time)
-      if (time == null || time == 0) {
-        return { cancel: true };
-
-      } else {
-        return { cancel: false };
-      }
-
-    },
+    blocklist,
     // {urls: ["*://www.zhihu.com/*"]},
     { urls: newlist },
     ["blocking"]);  
 }
 
 
-function getblock() {
-  chrome.tabs.query({}, function (tabs) {
-    blockTabs(tabs);
-  })
-}
-
-
-
-
-// pass tab to a function which can access blacklist 
-// let blacklist
-function blockTabs(tabs) {
-  chrome.storage.sync.get(['sites'], function (element) {
-    let blacklist = element.sites;
-    console.log(blacklist);
-    for (let site of blacklist) {
-      let regex = new RegExp(site + '.*');
-      // alert(regex);
-      for (tab of tabs) {
-        // alert(tab.url);
-        if (regex.test(tab.url)) {
-          chrome.tabs.executeScript(
-            tab.id,
-            { code: 'document.body.style.visibility =  "hidden"' });
-        }
-      }
-    }
-  })
-}
 
 
 // 安装时生效，重启时不生效
@@ -131,8 +139,16 @@ function blockTabs(tabs) {
 
 // 每次启动时生效。
 chrome.storage.sync.get(['sites'],function(element){
-  chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
+  // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
   // alert(element.sites)
   requestBlock(element.sites);
 })
 
+// keep track of the blacklist. 
+chrome.storage.onChanged.addListener(function (changes, storageName) {
+  console.log(changes.sites.newValue);
+  if(changes.sites){
+    requestBlock(changes.sites.newValue);
+    // remain.textContent = changes.time.newValue.toString();
+  }
+})
