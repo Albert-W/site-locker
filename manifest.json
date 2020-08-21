@@ -22,11 +22,9 @@
 
       "permissions": [
         "storage",
-        "notifications",
         "contextMenus",
         "tabs",
         "<all_urls>",
-        "*://*",
         "webRequest",
         "webRequestBlocking"
       ],

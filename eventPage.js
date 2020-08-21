@@ -5,11 +5,8 @@ var contextMenuItem = {
   'contexts': ['page']
 }
 chrome.contextMenus.create(contextMenuItem);
-
 chrome.contextMenus.onClicked.addListener(function (element) {
   if (element.menuItemId == "block") {
-    // alert("This website should be blocked");
-      // add the current url 
 
       chrome.tabs.query({active: true, currentWindow: true}, tabs => {
         let curUrl = new URL(tabs[0].url);
@@ -18,35 +15,39 @@ chrome.contextMenus.onClicked.addListener(function (element) {
         // alert(curUrl.hostname);
         addurl(curUrl.hostname);
         // getblock(); // do it during the call back function 
+        // refresh_current();
+        chrome.tabs.update(
+          tabs[0].id,
+          { url: tab.url });  
       })
-
   }
 })
 
 function addurl(url){
   chrome.storage.sync.get(['sites'], function (element) {
     var blacklist = new Set(element.sites);
-    console.log(blacklist);
+    // console.log(blacklist);
     blacklist.add(url);
     chrome.storage.sync.set({ 'sites': Array.from(blacklist) });
     requestBlock(Array.from(blacklist));
-    chrome.tabs.query({}, function (tabs) {
-      blockTabs(tabs,blacklist);
-    })
+    // chrome.tabs.query({}, function (tabs) {
+    //   blockTabs(tabs,Array.from(blacklist));
+    // })
   })
-  // callback();
 }
 
-// function getblock() {
-//   chrome.tabs.query({}, function (tabs) {
-//     blockTabs(tabs);
-//   })
-// }
+function refresh_current(){
+  chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+    chrome.tabs.update(
+      tabs[0].id,
+      { url: tabs[0].url });   
+  })
+}
+
 
 // pass tab to a function which can access blacklist 
 // let blacklist
-function blockTabs(tabs, blacklist) {
-
+function refresh_Tabs(tabs, blacklist) {
   for (let site of blacklist) {
     let regex = new RegExp(site + '.*');
     // alert(regex);
@@ -62,67 +63,86 @@ function blockTabs(tabs, blacklist) {
       }
     }
   }
-
 }
 
-
-
+function refresh_all(){
+  chrome.tabs.query({}, function (tabs) {
+    chrome.storage.sync.get(['sites'],function(element){
+      refresh_Tabs(tabs,element.sites);
+    }) 
+  })
+}
 
 // logic of message 
 var time
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  // to block all
+  if(request.todo == "time2zero"){
+    time = 0;
+    refresh_all();
+  }
+  // to unblock one;
   if (request.todo == "start timer") {
-    // alert(request.time);
+    refresh_current();
     time = request.time;
     chrome.browserAction.setBadgeText({
       "text": time.toString()
     });
     var timer = setInterval(function () {
       time -= 1;
-
       chrome.browserAction.setBadgeText({
         "text": Math.max(time,0).toString()
       });
-
       if (time <= 0 ) {
         clearInterval(timer);
-        // getblock();
-        addurl();
+        // to block all();
+        refresh_all();
       }
       chrome.storage.sync.set({ 'time': time });
-
-    }, 1000 )
+    }, 1000 * 60)
   }
 
   // 保存blacklist
-  if (request.todo == "blacklist") {
-    time = 0;
-    blacklist = request.sites;
-    // alert(blacklist);
-    requestBlock(blacklist);
+  // if (request.todo == "blacklist") {
+  //   time = 0;
+  //   blacklist = request.sites;
+  //   // alert(blacklist);
+  //   requestBlock(blacklist);
 
-  }
+  // }
 })
 
+var blockthem
 function requestBlock(blacklist){
-  let newlist = blacklist.map(i => "*://" + i + "/*");
-  // alert(newlist)
-  let blocklist =  function (details) {
+  // it is needed to remove previous listener. 
+  chrome.webRequest.onBeforeRequest.removeListener(blockthem);
+  blockthem =  function (details) {
+    // chrome.webRequest.onBeforeRequest.removeListener(blockthem);
     //alert(time)
-    if (time == null || time == 0) {
-      return { cancel: true };
+    if (time == null || time <= 0) {
+      url = new URL(details.url);
+
+      for(site of blacklist){
+        if(url.hostname == site){
+          return {cancel: true};
+        }
+      }
+      return { cancel: false };
 
     } else {
       return { cancel: false };
     }
-
   }
-  chrome.webRequest.onBeforeRequest.removeListener(blocklist);
+  
   chrome.webRequest.onBeforeRequest.addListener(
-    blocklist,
+    blockthem,
     // {urls: ["*://www.zhihu.com/*"]},
-    { urls: newlist },
+    // { urls: newlist },
+    {urls: ['<all_urls>']},
     ["blocking"]);  
+  // let newlist = blacklist.map(i => "*://" + i + "/*");
+  // alert(newlist)
+
 }
 
 
@@ -146,9 +166,11 @@ chrome.storage.sync.get(['sites'],function(element){
 
 // keep track of the blacklist. 
 chrome.storage.onChanged.addListener(function (changes, storageName) {
-  console.log(changes.sites.newValue);
   if(changes.sites){
+    // console.log("sites onChanged " + changes.sites.newValue);
     requestBlock(changes.sites.newValue);
+    refresh_all();
     // remain.textContent = changes.time.newValue.toString();
   }
+
 })

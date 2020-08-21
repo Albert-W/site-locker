@@ -12,22 +12,19 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
   blacklist = new Set(element.sites); 
 
   if(element.defaultTime > 0){
-
     minites.value = element.defaultTime;
   }
   if (element.time > 0) {
     remainDiv.style.visibility = 'visible';
     remain.textContent = element.time;
   }
-  // 向event page 发送消息保存blacklist
-  // chrome.runtime.sendMessage({ todo: "blacklist", sites: Array.from(blacklist) });
 
 })
 
 // keep track of the remain time. 
 chrome.storage.onChanged.addListener(function (changes, storageName) {
   if(changes.time){
-    remain.textContent = changes.time.newValue.toString();
+    remain.textContent = Math.max(changes.time.newValue,0).toString();
   }
 })
 
@@ -36,7 +33,7 @@ chrome.storage.onChanged.addListener(function (changes, storageName) {
 block.onclick = function (element) {
   // set time to zero
   chrome.storage.sync.set({ 'time':0 });
-
+  
   // add the current url 
   chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     let curUrl = new URL(tabs[0].url);
@@ -46,47 +43,49 @@ block.onclick = function (element) {
     blacklist.add(curUrl.hostname);
     chrome.storage.sync.set({ 'sites': Array.from(blacklist) })
   })
-
+  // message to block()
+  chrome.runtime.sendMessage({ todo: "time2zero"});
   // 向event page 发送消息保存blacklist
-  chrome.runtime.sendMessage({ todo: "blacklist", sites: Array.from(blacklist) });
+  // chrome.runtime.sendMessage({ todo: "blacklist", sites: Array.from(blacklist) });
 
-  getblock();
+  // getblock();
 };
 
-function getblock() {
-  chrome.tabs.query({}, function (tabs) {
-    blockTabs(tabs);
-  })
-}
+// function getblock() {
+//   chrome.tabs.query({}, function (tabs) {
+//     blockTabs(tabs);
+//   })
+// }
 
 // pass tab to a function which can access blacklist 
-function blockTabs(tabs) {
-  for (const site of blacklist) {
-    let regex = new RegExp(site + '.*');
-    // alert(regex);
-    for (tab of tabs) {
-      // alert(tab.url);
-      if (regex.test(tab.url)) {
-        // chrome.tabs.executeScript(
-        //   tab.id,
-        //   { code: 'document.body.style.visibility =  "hidden"' });
-        chrome.tabs.update(
-          tab.id,
-          { url: tab.url });        
-      }
-    }
-  }
-}
+// function blockTabs(tabs) {
+//   for (const site of blacklist) {
+//     let regex = new RegExp(site + '.*');
+//     // alert(regex);
+//     for (tab of tabs) {
+//       // alert(tab.url);
+//       if (regex.test(tab.url)) {
+//         // chrome.tabs.executeScript(
+//         //   tab.id,
+//         //   { code: 'document.body.style.visibility =  "hidden"' });
+//         chrome.tabs.update(
+//           tab.id,
+//           { url: tab.url });        
+//       }
+//     }
+//   }
+// }
 
 
 
 let unblock = document.getElementById('unblock');
 
 unblock.onclick = function (element) {
-  getUnblock();
+  // getUnblock();
   // 记录默认时间    
   chrome.storage.sync.set({ 'defaultTime': minites.value });
   // 在eventPage 处理定时任务。 
+  // message to unblock; 
   chrome.runtime.sendMessage({ todo: "start timer", time: minites.value });
 
   //显示隐藏块
@@ -100,48 +99,27 @@ unblock.onclick = function (element) {
 
 
 
-function getUnblock() {
-  chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-    unblockTabs(tabs);
-  })
-}
+// function getUnblock() {
+//   chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+//     unblockTabs(tabs);
+//   })
+// }
 
-function unblockTabs(tabs) {
-  for (const site of blacklist) {
-    let regex = new RegExp(site + '.*');
-    // alert(regex);
-    for (tab of tabs) {
-      // alert(tab.url);
-      if (regex.test(tab.url)) {
-        chrome.tabs.update(
-          tab.id,
-          { url: tab.url });
-      }
-    }
-  }
-
-}
-
-// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-//   if (request.todo == "click") {
-//     block.click();
+// function unblockTabs(tabs) {
+//   for (const site of blacklist) {
+//     let regex = new RegExp(site + '.*');
+//     // alert(regex);
+//     for (tab of tabs) {
+//       // alert(tab.url);
+//       if (regex.test(tab.url)) {
+//         chrome.tabs.update(
+//           tab.id,
+//           { url: tab.url });
+//       }
+//     }
 //   }
-// });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// }
 
 
 

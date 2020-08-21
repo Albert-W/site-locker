@@ -9,26 +9,26 @@ chrome.storage.sync.get('sites',function(element){
 let save = document.getElementById('saveSites');
 save.onclick = function(element){
   chrome.storage.sync.set({'sites': sites.value.trim().split('\n')}, function(){
-    var saveNote = {
-      type:'basic',
-      iconUrl:'images\\favicon48.png',
-      title:'Sites saved',
-      message:"your sites are successfully saved. Great."
-    };
-    chrome.notifications.create('savaNote',saveNote);
+    // var saveNote = {
+    //   type:'basic',
+    //   iconUrl:'images\\favicon48.png',
+    //   title:'Sites saved',
+    //   message:"your sites are successfully saved. Great."
+    // };
+    // chrome.notifications.create('savaNote',saveNote);
   });
 }
 
 let reset = document.getElementById('resetSites');
 reset.onclick = function(element){
   chrome.storage.sync.set({'sites': []});
-  sites.value = "";
-  var resetNote = {
-    type:'basic',
-    iconUrl:'images\\favicon48.png',
-    title:'Sites reset',
-    message:"your sites are successfully reseted. Great."
-  };
-  chrome.notifications.create('resetNote',resetNote);
+  // sites.value = "";
+  // var resetNote = {
+  //   type:'basic',
+  //   iconUrl:'images\\favicon48.png',
+  //   title:'Sites reset',
+  //   message:"your sites are successfully reseted. Great."
+  // };
+  // chrome.notifications.create('resetNote',resetNote);
 }
 
