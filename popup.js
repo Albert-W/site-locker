@@ -24,6 +24,7 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
 chrome.storage.onChanged.addListener(function (changes, storageName) {
   if(changes.time){
     remain.textContent = Math.max(changes.time.newValue,0).toString();
+    remainDiv.style.visibility = 'visible';
   }
 })
 
