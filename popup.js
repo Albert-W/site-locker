@@ -18,7 +18,6 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
     remainDiv.style.visibility = 'visible';
     remain.textContent = element.time;
   }
-
 })
 
 // keep track of the remain time. 
@@ -28,8 +27,6 @@ chrome.storage.onChanged.addListener(function (changes, storageName) {
   }
 })
 
-
-
 block.onclick = function (element) {
   // set time to zero
   chrome.storage.sync.set({ 'time':0 });
@@ -37,45 +34,14 @@ block.onclick = function (element) {
   // add the current url 
   chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     let curUrl = new URL(tabs[0].url);
-    // alert(url);
-    // alert(url.host);
-    // alert(curUrl.hostname);
+
     blacklist.add(curUrl.hostname);
     chrome.storage.sync.set({ 'sites': Array.from(blacklist) })
   })
   // message to block()
   chrome.runtime.sendMessage({ todo: "time2zero"});
-  // 向event page 发送消息保存blacklist
-  // chrome.runtime.sendMessage({ todo: "blacklist", sites: Array.from(blacklist) });
 
-  // getblock();
 };
-
-// function getblock() {
-//   chrome.tabs.query({}, function (tabs) {
-//     blockTabs(tabs);
-//   })
-// }
-
-// pass tab to a function which can access blacklist 
-// function blockTabs(tabs) {
-//   for (const site of blacklist) {
-//     let regex = new RegExp(site + '.*');
-//     // alert(regex);
-//     for (tab of tabs) {
-//       // alert(tab.url);
-//       if (regex.test(tab.url)) {
-//         // chrome.tabs.executeScript(
-//         //   tab.id,
-//         //   { code: 'document.body.style.visibility =  "hidden"' });
-//         chrome.tabs.update(
-//           tab.id,
-//           { url: tab.url });        
-//       }
-//     }
-//   }
-// }
-
 
 
 let unblock = document.getElementById('unblock');
@@ -94,49 +60,3 @@ unblock.onclick = function (element) {
   remainDiv.style.visibility = 'visible';
 
 };
-
-
-
-
-
-// function getUnblock() {
-//   chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-//     unblockTabs(tabs);
-//   })
-// }
-
-// function unblockTabs(tabs) {
-//   for (const site of blacklist) {
-//     let regex = new RegExp(site + '.*');
-//     // alert(regex);
-//     for (tab of tabs) {
-//       // alert(tab.url);
-//       if (regex.test(tab.url)) {
-//         chrome.tabs.update(
-//           tab.id,
-//           { url: tab.url });
-//       }
-//     }
-//   }
-
-// }
-
-
-
-
-
-// let changeColor = document.getElementById('changeColor');
-
-// chrome.storage.sync.get('color', function(data) {
-//   changeColor.style.backgroundColor = data.color;
-//   changeColor.setAttribute('value', data.color);
-// });
-
-// changeColor.onclick = function(element) {
-//   let color = element.target.value;
-//   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-//     chrome.tabs.executeScript(
-//         tabs[0].id,
-//         {code: 'document.body.style.backgroundColor = "' + color + '";'});
-//   });
-// };

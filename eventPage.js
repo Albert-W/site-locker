@@ -44,7 +44,6 @@ function refresh_current(){
   })
 }
 
-
 // pass tab to a function which can access blacklist 
 // let blacklist
 function refresh_Tabs(tabs, blacklist) {
@@ -117,8 +116,7 @@ function requestBlock(blacklist){
   // it is needed to remove previous listener. 
   chrome.webRequest.onBeforeRequest.removeListener(blockthem);
   blockthem =  function (details) {
-    // chrome.webRequest.onBeforeRequest.removeListener(blockthem);
-    //alert(time)
+
     if (time == null || time <= 0) {
       url = new URL(details.url);
 
@@ -147,16 +145,6 @@ function requestBlock(blacklist){
 
 
 
-
-// 安装时生效，重启时不生效
-// chrome.runtime.onInstalled.addListener(function() {
-
-//   chrome.storage.sync.get(['sites'],function(element){
-//     chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
-//     alert(element.sites)
-//   })
-// })
-
 // 每次启动时生效。
 chrome.storage.sync.get(['sites'],function(element){
   // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
@@ -174,3 +162,12 @@ chrome.storage.onChanged.addListener(function (changes, storageName) {
   }
 
 })
+
+// 安装时生效，重启时不生效
+// chrome.runtime.onInstalled.addListener(function() {
+
+//   chrome.storage.sync.get(['sites'],function(element){
+//     chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
+//     alert(element.sites)
+//   })
+// })
