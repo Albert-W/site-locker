@@ -82,7 +82,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
   // to unblock one;
   if (request.todo == "start timer") {
-    refresh_current();
+    //如果处于屏蔽状态，就刷新
+    if(time == null || time <= 0){
+      refresh_current();
+    } else{
+      clearInterval(timer);
+    }
     time = request.time;
     chrome.browserAction.setBadgeText({
       "text": time.toString()

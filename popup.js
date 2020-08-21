@@ -1,8 +1,9 @@
 let blacklist
-let minites = document.getElementById('minites');
+let minutes = document.getElementById('minutes');
 let block = document.getElementById('block');
 let remainDiv = document.getElementById('remainDiv');
 let remain = document.getElementById('remain');
+
 // let blockFlag = false;
 
 // time -> remain time.
@@ -12,7 +13,7 @@ chrome.storage.sync.get(['time', 'sites', 'defaultTime'], function (element) {
   blacklist = new Set(element.sites); 
 
   if(element.defaultTime > 0){
-    minites.value = element.defaultTime;
+    minutes.value = element.defaultTime;
   }
   if (element.time > 0) {
     remainDiv.style.visibility = 'visible';
@@ -50,14 +51,25 @@ let unblock = document.getElementById('unblock');
 unblock.onclick = function (element) {
   // getUnblock();
   // 记录默认时间    
-  chrome.storage.sync.set({ 'defaultTime': minites.value });
+  chrome.storage.sync.set({ 'defaultTime': minutes.value });
   // 在eventPage 处理定时任务。 
   // message to unblock; 
-  chrome.runtime.sendMessage({ todo: "start timer", time: minites.value });
+  chrome.runtime.sendMessage({ todo: "start timer", time: minutes.value });
 
   //显示隐藏块
-  let time = minites.value;
+  let time = minutes.value;
   remain.textContent = time;
   remainDiv.style.visibility = 'visible';
 
 };
+
+// Execute a function when the user releases a key on the keyboard
+minutes.addEventListener("keyup", function(event) {
+  // Number 13 is the "Enter" key on the keyboard
+  if (event.keyCode === 13) {
+    // Cancel the default action, if needed
+    event.preventDefault();
+    // Trigger the button element with a click
+    unblock.click();
+  }
+});
