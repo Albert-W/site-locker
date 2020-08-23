@@ -151,10 +151,16 @@ function requestBlock(blacklist){
 
 
 // 每次启动时生效。
-chrome.storage.sync.get(['sites'],function(element){
+chrome.storage.sync.get(['sites','time'],function(element){
   // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
   // alert(element.sites)
-  requestBlock(element.sites);
+  if(element.time <= 0){
+    requestBlock(element.sites);
+  } else {
+    chrome.browserAction.setBadgeText({
+      "text": element.time.toString()
+    });
+  }
 })
 
 // keep track of the blacklist. 
