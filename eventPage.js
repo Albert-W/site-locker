@@ -82,13 +82,19 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
   // to unblock one;
   if (request.todo == "start timer") {
+    startTimer(request.time);
+  }
+
+})
+
+function startTimer(time){
     //如果处于屏蔽状态，就刷新
     if(time == null || time <= 0){
       refresh_current();
     } else{
       clearInterval(timer);
     }
-    time = request.time;
+    // time = request.time;
     chrome.browserAction.setBadgeText({
       "text": time.toString()
     });
@@ -104,17 +110,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       }
       chrome.storage.sync.set({ 'time': time });
     }, 1000 * 60)
-  }
+}
 
-  // 保存blacklist
-  // if (request.todo == "blacklist") {
-  //   time = 0;
-  //   blacklist = request.sites;
-  //   // alert(blacklist);
-  //   requestBlock(blacklist);
-
-  // }
-})
 
 var blockthem
 function requestBlock(blacklist){
@@ -157,9 +154,11 @@ chrome.storage.sync.get(['sites','time'],function(element){
   if(element.time <= 0){
     requestBlock(element.sites);
   } else {
-    chrome.browserAction.setBadgeText({
-      "text": element.time.toString()
-    });
+    // chrome.browserAction.setBadgeText({
+    //   "text": element.time.toString()
+    // });
+    // chrome.runtime.sendMessage({ todo: "start timer", time: element.time });
+    startTimer(element.time);
   }
 })
 
