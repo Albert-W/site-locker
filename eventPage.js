@@ -18,7 +18,7 @@ chrome.contextMenus.onClicked.addListener(function (element) {
         // refresh_current();
         chrome.tabs.update(
           tabs[0].id,
-          { url: tab.url });  
+          { url: tabs[0].url });  
       })
   }
 })
@@ -79,21 +79,27 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if(request.todo == "time2zero"){
     time = 0;
     refresh_all();
+    chrome.browserAction.setBadgeText({
+      "text": 0
+    });
   }
   // to unblock one;
   if (request.todo == "start timer") {
-    startTimer(request.time);
+    time = request.time;
+    startTimer();
+    refresh_current();
   }
 
 })
 
-function startTimer(time){
+function startTimer(){
     //如果处于屏蔽状态，就刷新
-    if(time == null || time <= 0){
-      refresh_current();
-    } else{
-      clearInterval(timer);
-    }
+    // if(time == null || time <= 0){
+    //   refresh_current();
+    // } else{
+    //   clearInterval(timer);
+    // }
+    clearInterval(timer);
     // time = request.time;
     chrome.browserAction.setBadgeText({
       "text": time.toString()
@@ -151,14 +157,14 @@ function requestBlock(blacklist){
 chrome.storage.sync.get(['sites','time'],function(element){
   // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
   // alert(element.sites)
-  if(element.time <= 0){
-    requestBlock(element.sites);
-  } else {
+  requestBlock(element.sites);
+  if (element.time > 0) {
     // chrome.browserAction.setBadgeText({
     //   "text": element.time.toString()
     // });
     // chrome.runtime.sendMessage({ todo: "start timer", time: element.time });
-    startTimer(element.time);
+    time = element.time;
+    startTimer();
   }
 })
 
