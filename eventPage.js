@@ -78,18 +78,18 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   // to block all
   if(request.todo == "time2zero"){
     time = 0;
-    refresh_all();
     chrome.browserAction.setBadgeText({
       "text": 0
     });
+    refresh_all();
   }
   // to unblock one;
   if (request.todo == "start timer") {
-    time = request.time;
-    startTimer();
     if(time <= 0){
       refresh_current();
     }
+    time = request.time;
+    startTimer();
   }
 
 })
