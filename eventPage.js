@@ -87,7 +87,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.todo == "start timer") {
     time = request.time;
     startTimer();
-    refresh_current();
+    if(time <= 0){
+      refresh_current();
+    }
   }
 
 })
