@@ -94,6 +94,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 })
 
+var timer;
 function startTimer(){
     //如果处于屏蔽状态，就刷新
     // if(time == null || time <= 0){
@@ -106,7 +107,7 @@ function startTimer(){
     chrome.browserAction.setBadgeText({
       "text": time.toString()
     });
-    var timer = setInterval(function () {
+    timer = setInterval(function () {
       time -= 1;
       chrome.browserAction.setBadgeText({
         "text": Math.max(time,0).toString()
