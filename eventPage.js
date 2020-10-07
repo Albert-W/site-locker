@@ -23,6 +23,54 @@ chrome.contextMenus.onClicked.addListener(function (element) {
   }
 })
 
+var time;
+var hour;
+
+// 每次启动时生效。刷新时生效。
+// 启动时屏蔽网站，并且执行计时器
+
+chrome.storage.sync.get(['sites','time','hour'],function(element){
+  // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
+  // alert(3);
+  // alert(element.sites)
+  // alert(element.hour)
+  // 保存时间
+  hour = element.hour;
+  requestBlock(element.sites);
+  if (element.time > 0) {
+    // chrome.browserAction.setBadgeText({
+    //   "text": element.time.toString()
+    // });
+    // chrome.runtime.sendMessage({ todo: "start timer", time: element.time });
+    time = element.time;
+    startTimer();
+  }
+})
+
+// keep track of the blacklist. 
+// 添加新的屏蔽网站时，立即屏蔽
+chrome.storage.onChanged.addListener(function (changes, storageName) {
+  if(changes.sites){
+    // console.log("sites onChanged " + changes.sites.newValue);
+    requestBlock(changes.sites.newValue);
+    refresh_all();
+    // remain.textContent = changes.time.newValue.toString();
+  }
+
+})
+
+// 安装时生效，重启时不生效
+// chrome.runtime.onInstalled.addListener(function() {
+
+//   chrome.storage.sync.get(['sites'],function(element){
+//     chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
+//     alert(element.sites)
+//   })
+// })
+
+
+
+
 function addurl(url){
   chrome.storage.sync.get(['sites'], function (element) {
     var blacklist = new Set(element.sites);
@@ -74,7 +122,7 @@ function refresh_all(){
 
 // logic of message 
 // 监听popup.js发过来的指令
-var time
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   // to block all
   if(request.todo == "time2zero"){
@@ -86,6 +134,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
   // to unblock one;
   if (request.todo == "start timer") {
+    // alert(hour);
+
     if(time <= 0){
       refresh_current();
     }
@@ -128,7 +178,7 @@ function startTimer(){
 // 所有屏蔽生效的入口都在blockthem里面。
 // 是否通行的判断，时间的判断
 var blockthem;
-var hour;
+
 function requestBlock(blacklist){
   // it is needed to remove previous listener. 
   chrome.webRequest.onBeforeRequest.removeListener(blockthem);
@@ -137,6 +187,7 @@ function requestBlock(blacklist){
     var flag = 0;
     // 如果time > 0 且 时间在安全区之外 则通行；
     var hours = new Date().getHours();
+    // alert(hour);
     if (time > 0 && hours >= hour){
       //alert("白天无娱乐。")
       flag = 1;
@@ -180,43 +231,19 @@ function requestBlock(blacklist){
 
 }
 
+// 安装时生效，开关按钮
+// 重启时不生效
+// 刷新options page时不生效
+chrome.runtime.onInstalled.addListener(function() {
+  chrome.storage.sync.set({'hour':13},function(){
 
-
-// 每次启动时生效。
-// 启动时屏蔽网站，并且执行计时器
-chrome.storage.sync.get(['sites','time','hour'],function(element){
-  // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
-  // alert(element.sites)
-  // 保存时间
-  hour = element.hour;
-  requestBlock(element.sites);
-  if (element.time > 0) {
-    // chrome.browserAction.setBadgeText({
-    //   "text": element.time.toString()
-    // });
-    // chrome.runtime.sendMessage({ todo: "start timer", time: element.time });
-    time = element.time;
-    startTimer();
-  }
+    // alert(hour.value);
+    // chrome.storage.sync.get(['hour'],function(element){
+    //   // sites.value = [ 1, 2, 3, 4, 5, 6 ].join('\n')
+    //   // alert(element.hour);
+    //   hour.value = element.hour;
+      
+    // })
+    
+  });
 })
-
-// keep track of the blacklist. 
-// 添加新的屏蔽网站时，立即屏蔽
-chrome.storage.onChanged.addListener(function (changes, storageName) {
-  if(changes.sites){
-    // console.log("sites onChanged " + changes.sites.newValue);
-    requestBlock(changes.sites.newValue);
-    refresh_all();
-    // remain.textContent = changes.time.newValue.toString();
-  }
-
-})
-
-// 安装时生效，重启时不生效
-// chrome.runtime.onInstalled.addListener(function() {
-
-//   chrome.storage.sync.get(['sites'],function(element){
-//     chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
-//     alert(element.sites)
-//   })
-// })
