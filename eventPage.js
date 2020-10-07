@@ -7,19 +7,19 @@ var contextMenuItem = {
 chrome.contextMenus.create(contextMenuItem);
 chrome.contextMenus.onClicked.addListener(function (element) {
   if (element.menuItemId == "block") {
-
-      chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-        let curUrl = new URL(tabs[0].url);
-        // alert(url);
-        // alert(url.host);
-        // alert(curUrl.hostname);
-        addurl(curUrl.hostname);
-        // getblock(); // do it during the call back function 
-        // refresh_current();
-        chrome.tabs.update(
-          tabs[0].id,
-          { url: tabs[0].url });  
-      })
+    time = 0;
+    chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+      let curUrl = new URL(tabs[0].url);
+      // alert(url);
+      // alert(url.host);
+      // alert(curUrl.hostname);
+      addurl(curUrl.hostname);
+      // getblock(); // do it during the call back function 
+      // refresh_current();
+      chrome.tabs.update(
+        tabs[0].id,
+        { url: tabs[0].url });  
+    })
   }
 })
 
@@ -73,6 +73,7 @@ function refresh_all(){
 }
 
 // logic of message 
+// 监听popup.js发过来的指令
 var time
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   // to block all
@@ -94,14 +95,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 })
 
+// 所有计时器操作都在 startTimer
 var timer;
 function startTimer(){
-    //如果处于屏蔽状态，就刷新
-    // if(time == null || time <= 0){
-    //   refresh_current();
-    // } else{
-    //   clearInterval(timer);
-    // }
+  // 如果在白天，则无法启动计时器
+  var hours = new Date().getHours();
+  if (hours < 13){
+    return 0;
+  }
+
     clearInterval(timer);
     // time = request.time;
     chrome.browserAction.setBadgeText({
@@ -122,27 +124,50 @@ function startTimer(){
 }
 
 
+
+// 所有屏蔽生效的入口都在blockthem里面。
+// 是否通行的判断，时间的判断
 var blockthem
 function requestBlock(blacklist){
   // it is needed to remove previous listener. 
   chrome.webRequest.onBeforeRequest.removeListener(blockthem);
   blockthem =  function (details) {
-
-    if (time == null || time <= 0) {
+    // 如果 flag = 0 则屏蔽，flag = 1 则通行
+    var flag = 0;
+    // 如果time > 0 且 时间在安全区之外 则通行；
+    var hours = new Date().getHours();
+    if (time > 0 && hours >= 13){
+      //alert("白天无娱乐。")
+      flag = 1;
+    }    
+    if (flag == 1){
+      return {cancel: false};
+    } else {
       url = new URL(details.url);
-
       for(site of blacklist){
         if(url.hostname == site){
           return {cancel: true};
         }
       }
       return { cancel: false };
-
-    } else {
-      return { cancel: false };
     }
+
+
+    // if (time == null || time <= 0) {
+    //   url = new URL(details.url);
+
+    //   for(site of blacklist){
+    //     if(url.hostname == site){
+    //       return {cancel: true};
+    //     }
+    //   }
+    //   return { cancel: false };
+
+    // } else {
+    //   return { cancel: false };
+    // }
   }
-  
+  // 为所有网页请求 添加屏蔽器
   chrome.webRequest.onBeforeRequest.addListener(
     blockthem,
     // {urls: ["*://www.zhihu.com/*"]},
@@ -157,6 +182,7 @@ function requestBlock(blacklist){
 
 
 // 每次启动时生效。
+// 启动时屏蔽网站，并且执行计时器
 chrome.storage.sync.get(['sites','time'],function(element){
   // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
   // alert(element.sites)
@@ -172,6 +198,7 @@ chrome.storage.sync.get(['sites','time'],function(element){
 })
 
 // keep track of the blacklist. 
+// 添加新的屏蔽网站时，立即屏蔽
 chrome.storage.onChanged.addListener(function (changes, storageName) {
   if(changes.sites){
     // console.log("sites onChanged " + changes.sites.newValue);
