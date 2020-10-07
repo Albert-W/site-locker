@@ -127,7 +127,8 @@ function startTimer(){
 
 // 所有屏蔽生效的入口都在blockthem里面。
 // 是否通行的判断，时间的判断
-var blockthem
+var blockthem;
+var hour;
 function requestBlock(blacklist){
   // it is needed to remove previous listener. 
   chrome.webRequest.onBeforeRequest.removeListener(blockthem);
@@ -136,7 +137,7 @@ function requestBlock(blacklist){
     var flag = 0;
     // 如果time > 0 且 时间在安全区之外 则通行；
     var hours = new Date().getHours();
-    if (time > 0 && hours >= 13){
+    if (time > 0 && hours >= hour){
       //alert("白天无娱乐。")
       flag = 1;
     }    
@@ -183,9 +184,11 @@ function requestBlock(blacklist){
 
 // 每次启动时生效。
 // 启动时屏蔽网站，并且执行计时器
-chrome.storage.sync.get(['sites','time'],function(element){
+chrome.storage.sync.get(['sites','time','hour'],function(element){
   // chrome.runtime.sendMessage({todo:"blacklist", sites:element.sites});  
   // alert(element.sites)
+  // 保存时间
+  hour = element.hour;
   requestBlock(element.sites);
   if (element.time > 0) {
     // chrome.browserAction.setBadgeText({
